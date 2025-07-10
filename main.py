@@ -15,7 +15,10 @@ utility_vec = get_utility_vector(f_0, lamda, fetch_cost + cache_storage_cost)
 
 C = { 'C1': fetch_cost, 'C2': cache_storage_cost}
 
-n, _ = get_n(utility_vec, p, f_0, C)               # n = number of time-slots until which cached value is retained
+# n, _ = get_n(utility_vec, p, f_0, C)               # n = number of time-slots until which cached value is retained
+t_max = 34
+n_max = 8
+n, r, m, _ = learn_f_to_get_n(t_max, n_max, p, C, f_0, lamda)
 cached_val = None           
 cumulative_utility = 0
 total_cost_incurred = 0
@@ -23,8 +26,8 @@ total_cost_incurred = 0
 requests = simulate_requests(T, p)
 plot_requests(requests)
 
-
-t=0
+# t=0
+t=t_max+1
 n_i = 0
 prev_t = 0
 for r in requests:
