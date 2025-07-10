@@ -4,7 +4,7 @@ from optimal_caching import *
 T = 100                     # number of timeslots
 p = 0.6                     # probability of requests
 fetch_cost = 10             # alpha (per request)
-cache_storage_cost = 0.01    # s (per time slot)
+cache_storage_cost = 0.01   # s (per time slot)
 y_i = 0                     # number of time slots between the end of the cache period and the next request, initialized to zero
 Y = []                      # list of y_i
 lamda = 0.05                # decay rate for exponentially decreasing utility
