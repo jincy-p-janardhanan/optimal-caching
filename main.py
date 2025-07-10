@@ -3,12 +3,12 @@ from optimal_caching import *
 
 T = 100                     # number of timeslots
 p = 0.6                     # probability of requests
-fetch_cost = 5              # alpha (per request)
-cache_storage_cost = 1      # s (per time slot)
+fetch_cost = 10             # alpha (per request)
+cache_storage_cost = 0.5    # s (per time slot)
 y_i = 0                     # number of time slots between the end of the cache period and the next request, initialized to zero
 Y = []                      # list of y_i
-lamda = 0.2                 # decay rate for exponentially decreasing utility
-f_0 = 1000                  # utility of serving at the same time when value is fetched
+lamda = 0.15                # decay rate for exponentially decreasing utility
+f_0 = 25                    # utility of serving at the same time when value is fetched
 beta = f_0 - fetch_cost     # instantaneous reward at the time of fetch of the file
 
 utility_vec = get_utility_vector(f_0, lamda, fetch_cost + cache_storage_cost)
