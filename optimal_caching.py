@@ -43,6 +43,7 @@ def get_n(utility_vec, p, f_0, C, plot=True, figname="h_n vs n.png"):
         h.append( (b + p * G[-1] - n * C['C2'])/(n + (1/p)) )
         if h[-1] < h[-2] and n_opt == 0:
             n_opt = n-1
+            break
         n += 1
     
     if plot == True:
@@ -50,7 +51,7 @@ def get_n(utility_vec, p, f_0, C, plot=True, figname="h_n vs n.png"):
     
     return n_opt, h
 
-# ALGO 2 - Online Policy (Learning Utility Vector to compute n*)
+# ALGO 2 - Online Policy (Learning Utility Vector to Compute n*)
 def learn_f_to_get_n(t_max, n_max, p, C, f_0, lamda, plot=True):
     t = 1
     fetch = 0
@@ -59,7 +60,6 @@ def learn_f_to_get_n(t_max, n_max, p, C, f_0, lamda, plot=True):
     learn = list(range(1, n_max+1))
     utility_vec = [0] * (n_max+1)    
     R = [0] * (t_max+1)
-    
     M, T = 0, 0
 
     while(t <= t_max):
@@ -71,24 +71,80 @@ def learn_f_to_get_n(t_max, n_max, p, C, f_0, lamda, plot=True):
                 R[t] = f_0 - C['C1']
             elif age in learn:
                 utility_vec[age] = get_utility(age, f_0, lamda)
+                fetch += 1                  # Incrementing fetch whenever utility retrieved : MODIFICATION FROM REFERENCE
                 learn.remove(age)
                 R[t] = utility_vec[age] - C['C2']
                 
             age = (age + 1) if age < n_max else 0
             
-        elif age > 0 and age <= n_max:
+        elif age > 1 and age <= n_max:          # age > 1 : CORRECTION FROM REFERENCE TO ENSURE UTILITY FOR AGE IS UPDATED STARTING FROM 1
             age = (age + 1) if age < n_max else 0
             R[t] = -C['C2']
         
         else:
             R[t] = 0
         
-        if age == 0 and len(learn) == 0  and n_opt == 0:
-            n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo2.png")
-            n_max = n_opt
-            M = fetch
-            T = t
+        t += 1
+    
+    # if age == 0 and len(learn) == 0  and n_opt == 0:          # These conditions evaluate only at the end of the loop, hence kept outside loop : MODIFICATION FROM REFERENCE
+    n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo2.png")
+    n_max = n_opt
+    M = fetch
+    T = t
+    
+    return n_opt, R, M, T
+
+# ALGO 3 - Online Policy to get n* with Early Estimation
+def get_n_with_early_est(t_max, n_max, p, C, f_0, lamda, plot=True):
+    t = 1
+    fetch = 0
+    age = 0
+    n_opt = 0
+    learn = list(range(1, n_max+1))
+    utility_vec = [0] * (n_max+1)    
+    R = [0] * (t_max+1)
+    M, T = 0, 0
+    X = []
+    
+    while(t <= t_max):
+        x_t = simulate_requests(1, p)[0]
+        X.append(x_t)
+        
+        if x_t == 1:
+            if age == 0:
+                utility_vec[0] = f_0
+                fetch += 1
+                R[t] = f_0 - C['C1']
+            elif age in learn:
+                utility_vec[age] = get_utility(age, f_0, lamda)
+                fetch += 1
+                learn.remove(age)
+                R[t] = utility_vec[age] - C['C2']
+                
+            age = (age + 1) if age < n_max else 0
+            
+        elif age > 1 and age <= n_max:
+            age = (age + 1) if age < n_max else 0
+            R[t] = -C['C2']
+        
+        else:
+            R[t] = 0
+        
+        # if age == 0 and n_opt == 0  and fetch > 0:
+        if fetch > 0 and age > 2:           # UPDATED CONDITION : MODIFICATION FROM REFERENCE
+            if len(learn) == 0:
+                n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo3.png")
+            
+            elif learn[0] > 1:
+                u_learnt = utility_vec[:learn[0] - 1]
+                if len(u_learnt) >=2:
+                    n_opt, _ = get_n(u_learnt, p, f_0, C, figname="h_n vs n-algo3.png")            
+                    if n_opt > 0:           # MOVED TO INSIDE OF ELIF TO PREVENT UPDATES AFTER n_opt IS SET : MODIFICATION FROM REFERENCE 
+                        n_max = n_opt
+                        M = fetch
+                        T = t
+                        break           # UNIMODAL FUNCTION           
         
         t += 1
         
-    return n_opt, R, M, T
+    return n_opt, R, M, T, X       

@@ -14,20 +14,23 @@ beta = f_0 - fetch_cost     # instantaneous reward at the time of fetch of the f
 utility_vec = get_utility_vector(f_0, lamda, fetch_cost + cache_storage_cost)
 
 C = { 'C1': fetch_cost, 'C2': cache_storage_cost}
+requests = simulate_requests(T, p)
+plot_requests(requests)
 
 # n, _ = get_n(utility_vec, p, f_0, C)               # n = number of time-slots until which cached value is retained
 t_max = 34
 n_max = 8
-n, r, m, _ = learn_f_to_get_n(t_max, n_max, p, C, f_0, lamda)
+# n, r, m, _ = learn_f_to_get_n(t_max, n_max, p, C, f_0, lamda)
+n, r, m, _, _ = get_n_with_early_est(t_max, n_max, p, C, f_0, lamda)
+
 cached_val = None           
 cumulative_utility = 0
 total_cost_incurred = 0
 
-requests = simulate_requests(T, p)
-plot_requests(requests)
+print(f"\n Requests: {requests}")
+print(f"n = {n}")
 
-# t=0
-t=t_max+1
+t=0
 n_i = 0
 prev_t = 0
 for r in requests:
@@ -37,6 +40,7 @@ for r in requests:
         cumulative_utility += beta
         cycle_cost = fetch_cost + n * cache_storage_cost
         total_cost_incurred += cycle_cost
+        print(f"t = {t}, total cost update: {total_cost_incurred}")
         n_i = 0
         y_i = t - prev_t
         Y.append(y_i)
@@ -44,11 +48,12 @@ for r in requests:
     if r == 1  and cached_val != None:
         age = get_AOI(cached_val['obtained_at'], t)
         cumulative_utility += get_utility(age, f_0, lamda)
-        
-    if n_i != 0:
+        print(f"t = {t}, Cumulative Utility update: {cumulative_utility}")
         n_i += 1
+
         
-    if n_i == n:
+    if n_i == n and cached_val != None:
+        print(f"t = {t}, Cache reset")
         cached_val = None
         prev_t = t
         
