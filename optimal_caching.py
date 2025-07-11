@@ -87,7 +87,10 @@ def learn_f_to_get_n(t_max, n_max, p, C, f_0, lamda, plot=True):
         t += 1
     
     # if age == 0 and len(learn) == 0  and n_opt == 0:          # These conditions evaluate only at the end of the loop, hence kept outside loop : MODIFICATION FROM REFERENCE
-    n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo2.png")
+    if plot == True:
+        n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo2.png")
+    else:
+        n_opt, _ = get_n(utility_vec, p, f_0, C, False)
     n_max = n_opt
     M = fetch
     T = t
@@ -133,12 +136,18 @@ def get_n_with_early_est(t_max, n_max, p, C, f_0, lamda, plot=True):
         # if age == 0 and n_opt == 0  and fetch > 0:
         if fetch > 0 and age > 2:           # UPDATED CONDITION : MODIFICATION FROM REFERENCE
             if len(learn) == 0:
-                n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo3.png")
+                if plot == True:
+                    n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo3.png")
+                else:
+                    n_opt, _ = get_n(utility_vec, p, f_0, C, False)
             
             elif learn[0] > 1:
                 u_learnt = utility_vec[:learn[0] - 1]
                 if len(u_learnt) >=2:
-                    n_opt, _ = get_n(u_learnt, p, f_0, C, figname="h_n vs n-algo3.png")            
+                    if plot == True:
+                        n_opt, _ = get_n(utility_vec, p, f_0, C, figname="h_n vs n-algo3.png")
+                    else:
+                        n_opt, _ = get_n(utility_vec, p, f_0, C, False)            
                     if n_opt > 0:           # MOVED TO INSIDE OF ELIF TO PREVENT UPDATES AFTER n_opt IS SET : MODIFICATION FROM REFERENCE 
                         n_max = n_opt
                         M = fetch

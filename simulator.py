@@ -1,7 +1,7 @@
 import math
 import numpy as np
 import matplotlib.pyplot as plt
-from scipy.stats import expon
+import json
 
 np.random.seed(1)
 
@@ -45,3 +45,45 @@ def get_utility_vector(f_0, lamda, cost):
             break
         i+=1
     return utility_vec
+
+def simulate_policy_evaluation(T, requests, C, lamda, f_0, n):
+    beta = f_0 - C['C1']     # instantaneous reward at the time of fetch of the file
+    y_i = 0                     # number of time slots between the end of the cache period and the next request, initialized to zero
+    Y = []                      # list of y_i
+    
+    cached_val = None           
+    cumulative_utility = 0
+    total_cost_incurred = 0
+    t=0
+    n_i = 0
+    prev_t = 0
+    for r in requests:
+        if r == 1 and cached_val == None:
+            value = get_sensor_value()
+            cached_val = store_to_cache(value, t)
+            cumulative_utility += beta
+            cycle_cost = C['C1'] + n * C['C2']
+            total_cost_incurred += cycle_cost
+            # print(f"t = {t}, total cost update: {total_cost_incurred}")
+            n_i = 0
+            y_i = t - prev_t
+            Y.append(y_i)
+            
+        if r == 1  and cached_val != None:
+            age = get_AOI(cached_val['obtained_at'], t)
+            cumulative_utility += get_utility(age, f_0, lamda)
+            # print(f"t = {t}, Cumulative Utility update: {cumulative_utility}")
+            n_i += 1
+
+            
+        if n_i == n and cached_val != None:
+            # print(f"t = {t}, Cache reset")
+            cached_val = None
+            prev_t = t
+            
+        t+=1
+
+    total_reward = (cumulative_utility - total_cost_incurred)/T
+    # print(total_reward)
+    
+    return total_reward, Y
