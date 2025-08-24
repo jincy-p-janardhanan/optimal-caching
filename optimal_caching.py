@@ -211,6 +211,10 @@ def get_n_ucb_utility(t_max, n_max, p, C, f_0, lamda, plot=True):
             total_rewards = sum(rv[0] for rv in reward_vec)
             avg_reward = total_rewards / total_counts if total_counts > 0 else 0.0
             age_counts = [rv[1] for rv in reward_vec]
-            print(f"T:{t}, p:{p}, n_opt:{n_opt} reward:{avg_reward}, age_counts: {age_counts}, ucbs: {reward_ucbs} ")
+            
+            # Convert np.float64 to float and format to 2 decimal places
+            ucbs_formatted = [f"{float(ucb):.2f}" for ucb in reward_ucbs]
+            
+            print(f"T:{t}, p:{p}, n_opt:{n_opt} reward:{avg_reward:.2f}, age_counts: {age_counts}, ucbs: {ucbs_formatted}")
 
         t += 1
