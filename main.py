@@ -6,7 +6,7 @@ import sys
 import json
 
 if len(sys.argv) < 3:
-    print("Usage: python3 main.py <simulator_params_file.json>  'algo1'|'algo2'|'algo3'")
+    print("Usage: python3 main.py <simulator_params_file.json>  'algo1'|'algo2'|'algo3'|'algo4'")
     sys.exit(1)
 
 sim_params_file = sys.argv[1]
@@ -26,11 +26,21 @@ result = []
 # print(Ts)
 # print(ps)
 
+if sys.argv[2] == 'algo4':
+    for sim_params in sim_params_list:
+        # print(json.dumps(sim_params, indent=4))
+        with open("requests.txt", "w") as f:
+            for p in ps:
+                get_n_ucb_utility(1000, sim_params['n_max'], p, sim_params['C'], sim_params['f_0'], sim_params['lamda'])
+                print("__________________________________________\n")
+    sys.exit(0)                
+                    
+                    
 for sim_params in sim_params_list:
     # print(json.dumps(sim_params, indent=4))
     with open("requests.txt", "w") as f:
-        for T in Ts:
-            for p in ps:
+        for p in ps:
+            for T in Ts:
                 requests = simulate_requests(T, p)
                 # plot_requests(requests, f"requests_T-{T}_p-{p}.png")
                 f.write("".join(str(r) for r in requests) + "\n")
@@ -48,7 +58,7 @@ for sim_params in sim_params_list:
                     
                 reward, _ = simulate_policy_evaluation(T, requests, sim_params['C'], sim_params['lamda'], sim_params['f_0'], n)
                 rewards.append(reward)
-                # print(f"T : {T}\np:{p}\nrewards:{rewards}")
+                print(f"T:{T}, p:{p}, n_opt:{n} avg_reward:{reward}")
                 result.append({
                     "T": T,
                     "p": p,
@@ -56,6 +66,7 @@ for sim_params in sim_params_list:
                     "requests": requests.tolist(),
                     "reward": reward
                 })
+            print("__________________________________________\n")
                 
 with open("simulation_results.json", "w") as f:
     json.dump(result, f, indent=2)

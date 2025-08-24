@@ -157,3 +157,60 @@ def get_n_with_early_est(t_max, n_max, p, C, f_0, lamda, plot=True):
         t += 1
         
     return n_opt, R, M, T, X       
+
+def ucb(reward_vec, t):
+    if reward_vec[1] == 0:
+        return float('inf')
+    boost = np.sqrt((2 * np.log(t)) / reward_vec[1])
+    return reward_vec[0]/reward_vec[1] + boost
+
+def get_n_ucb_utility(t_max, n_max, p, C, f_0, lamda, plot=True):
+    
+    t=1
+    age = 0
+    reward_vec = [[0, 0] for _ in range(n_max + 1)]    # list of lists (cumulative reward, count)
+    reward_ucbs = [0 for _ in range(n_max+1)]
+    n_opt = 0
+    
+    while t <= t_max:
+        x_t = simulate_requests(1, p)[0]
+        
+        # to ensure all ages are explored at least once
+        init_done = all(reward_vec[a][1] > 1 for a in range(1, len(reward_vec)))
+
+        if x_t == 1:
+            if age == 0:
+                reward = get_noisy_utility(0, f_0, lamda) - C['C1']
+            else:
+                reward = get_noisy_utility(age if init_done else 0, f_0, lamda) - C['C2']
+
+            # Update sample count when request is served at this age
+            reward_vec[age][1] += 1
+
+            if init_done:
+                reward_ucbs = [ucb(reward_vec[a], t) for a in range(n_max+1)]
+                n_opt = np.argmax(reward_ucbs)
+            else:
+                # until all ages are sampled at least once
+                n_opt = n_max
+
+        elif age > 0:
+            reward = -C['C2']
+        else:
+            reward = 0
+
+        reward_vec[age][0] += reward
+
+        if age >= n_opt or age > n_max:
+            age = 0
+        else:
+            age += 1
+
+        if t % 100 == 0 and init_done:
+            total_counts = sum(rv[1] for rv in reward_vec)
+            total_rewards = sum(rv[0] for rv in reward_vec)
+            avg_reward = total_rewards / total_counts if total_counts > 0 else 0.0
+            age_counts = [rv[1] for rv in reward_vec]
+            print(f"T:{t}, p:{p}, n_opt:{n_opt} reward:{avg_reward}, age_counts: {age_counts}, ucbs: {reward_ucbs} ")
+
+        t += 1

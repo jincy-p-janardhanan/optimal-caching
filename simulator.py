@@ -34,6 +34,9 @@ def get_AOI(cache_t, t):
 def get_utility(age, f_0, lamda):
     return f_0 * np.exp(-lamda * age)
 
+def get_noisy_utility(age, f_0, lamda, noise_std=0.1):
+    return f_0 * np.exp(-lamda * age) + np.random.normal(0, noise_std)
+
 def get_utility_vector(f_0, lamda, cost):
     i = 1
     utility_vec = [f_0]
